@@ -14,7 +14,7 @@ router.post("/", (req, res) => {
     });
 });
 
-router.post("/:id/posts", (req, res) => {
+router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
   const newPost = { user_id: req.params.id, ...req.body };
   postsDB
     .insert(newPost)
@@ -36,7 +36,7 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validateUserId, (req, res) => {
   db.getById(req.params.id)
     .then((user) => {
       if (!user) {
@@ -54,7 +54,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.get("/:id/posts", (req, res) => {
+router.get("/:id/posts", validateUserId, (req, res) => {
   db.getUserPosts(req.params.id)
     .then((posts) => {
       res.status(200).json(posts);
@@ -67,7 +67,7 @@ router.get("/:id/posts", (req, res) => {
     });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", validateUserId, (req, res) => {
   db.remove(req.params.id)
     .then((user) => {
       res.status(200).json({ deleted: user });
@@ -80,7 +80,7 @@ router.delete("/:id", (req, res) => {
     });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", validateUserId, validateUser, (req, res) => {
   db.update(req.params.id, req.body)
     .then((updated) => {
       res.status(200).json({ updated: updated });
@@ -96,15 +96,30 @@ router.put("/:id", (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  // do your magic!
+  db.getById(req.params.id).then((user) => {
+    if (!user) {
+      res.status(400).json({ message: "invalid user id" });
+    } else {
+      req.user = req.params.id;
+      next();
+    }
+  });
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if (req.body.name === undefined) {
+    res.status(400).json({ message: "missing user data" });
+  } else {
+    next();
+  }
 }
 
 function validatePost(req, res, next) {
-  // do your magic!
+  if (req.body.text === undefined) {
+    res.status(400).json({ message: "missing required text field" });
+  } else {
+    next();
+  }
 }
 
 module.exports = router;
