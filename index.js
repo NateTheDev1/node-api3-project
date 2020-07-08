@@ -9,6 +9,9 @@ app.use(express.json());
 const userRouter = require("./users/userRouter");
 app.use("/api/users", userRouter);
 
+const postRouter = require("./posts/postRouter");
+app.use("/api/posts", postRouter);
+
 app.get("/", (req, res) => {
   res.json("Hello");
 });
